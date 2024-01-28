@@ -4,21 +4,22 @@ import {autor, livros} from "../models/index.js";
 class LivroController {
 
   static async listarLivros (req, res, next) {
-
     try {
-      const listaLivros = await livros.find({});
-      res.status(200).json(listaLivros);
+      const buscaLivros = livros.find();
+      req.resultado = buscaLivros;
+      next();
     }catch(erro) {
       next(erro);
-    }
-
+    }  
   }
 
   static async listarLivroPorId (req, res, next) {
 
     try {
       const id = req.params.id;
-      const livroEncontrado = await livros.findById(id);
+      //const livroEncontrado = await livros.findById(id);
+      const livroEncontrado = await livros.findById(id, {}, { autopopulate: false }) //desativa a autopopulate
+        .populate("autor"); //população mais específica
       if(livroEncontrado !== null) {
         res.status(200).json(livroEncontrado);
       }else{
@@ -98,8 +99,11 @@ class LivroController {
       const busca = await processaBusca(req.query);
 
       if (busca !== null) {
-        const livrosResultado = await livros.find(busca).populate("autor");
-        res.status(200).json(livrosResultado);
+        const livrosResultado = livros.find(busca);
+
+        req.resultado = livrosResultado;
+
+        next();
       }else {
         res.status(200).send([]);
       }
